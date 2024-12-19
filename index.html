@@ -12,24 +12,27 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             background-color: #f4f4f9;
         }
 
         h2 {
             color: #333;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
         .chart-container {
             position: relative;
-            width: 100%;
-            overflow-x: auto; /* Kích hoạt thanh cuộn ngang */
+            width: 95%; /* Đảm bảo biểu đồ co giãn */
+            max-width: 1200px; /* Giới hạn chiều rộng tối đa */
+            height: 70vh; /* Chiều cao tương ứng 70% màn hình */
         }
 
         canvas {
-            min-width: 3000px; /* Tăng chiều rộng để cuộn nhiều hơn */
-            height: 800px;     /* Chiều cao gấp đôi */
+            width: 100% !important; /* Canvas tự động giãn theo container */
+            height: auto !important;
         }
     </style>
 </head>
@@ -51,20 +54,18 @@
                 let labels = data.map(item => {
                     const date = new Date(item.date); // Chuyển đổi chuỗi ngày thành Date object
                     const day = String(date.getDate()).padStart(2, "0");
-                    const month = String(date.getMonth() + 1).padStart(2, "0"); // Tháng (0-11) + 1
-                    const year = String(date.getFullYear()).slice(-2); // Lấy 2 chữ số cuối của năm
-                    return `${day}/${month}/${year}`; // Định dạng dd/mm/yy
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const year = String(date.getFullYear()).slice(-2);
+                    return `${day}/${month}/${year}`;
                 });
 
-                let duongXanhValues = data.map(item => item.duongXanh); // Giá trị đường xanh
-                let duongTrangValues = data.map(item => item.duongTrang); // Giá trị đường trắng
+                let duongXanhValues = data.map(item => item.duongXanh);
+                let duongTrangValues = data.map(item => item.duongTrang);
 
-                // Đảo ngược thứ tự dữ liệu
                 labels.reverse();
                 duongXanhValues.reverse();
                 duongTrangValues.reverse();
 
-                // Tính vùng tô màu: dưới 20 và trên đường trắng
                 const fillData = duongXanhValues.map((value, index) => {
                     return (value < 20 && value > duongTrangValues[index]) ? value : null;
                 });
@@ -73,7 +74,7 @@
                 new Chart(ctx, {
                     type: "line",
                     data: {
-                        labels: labels, // Ngày định dạng dd/mm/yy (đã đảo ngược)
+                        labels: labels,
                         datasets: [
                             {
                                 label: "Đường Xanh",
@@ -96,25 +97,25 @@
                                 label: "Đường Ngang 20",
                                 data: Array(labels.length).fill(20),
                                 borderColor: "green",
-                                borderDash: [5, 5], // Đường nét đứt
+                                borderDash: [5, 5],
                                 borderWidth: 2,
-                                pointRadius: 0, // Không có điểm
+                                pointRadius: 0,
                                 fill: false
                             },
                             {
                                 label: "Đường Ngang 60",
                                 data: Array(labels.length).fill(60),
                                 borderColor: "red",
-                                borderDash: [5, 5], // Đường nét đứt
+                                borderDash: [5, 5],
                                 borderWidth: 2,
-                                pointRadius: 0, // Không có điểm
+                                pointRadius: 0,
                                 fill: false
                             },
                             {
                                 label: "Vùng tô màu",
                                 data: fillData,
                                 borderColor: "transparent",
-                                backgroundColor: "rgba(0, 255, 255, 0.3)", // Màu xanh nhạt
+                                backgroundColor: "rgba(0, 255, 255, 0.3)",
                                 borderWidth: 0,
                                 pointRadius: 0,
                                 fill: true
@@ -123,7 +124,7 @@
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
+                        maintainAspectRatio: true, /* Giữ tỷ lệ cho biểu đồ */
                         plugins: {
                             legend: {
                                 display: true,
@@ -137,10 +138,7 @@
                                     text: "Ngày (dd/mm/yy)"
                                 },
                                 ticks: {
-                                    autoSkip: false, // Hiển thị tất cả các tick
-                                    callback: function(value, index, ticks) {
-                                        return labels[index]; // Hiển thị ngày tháng năm
-                                    }
+                                    autoSkip: true
                                 }
                             },
                             y: {
@@ -150,19 +148,17 @@
                                 },
                                 beginAtZero: true,
                                 ticks: {
-                                    stepSize: 10 // Bước tăng giá trị trục Y
+                                    stepSize: 10
                                 }
                             }
                         }
                     }
                 });
-
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu:", error);
             }
         }
 
-        // Gọi hàm để fetch dữ liệu và render biểu đồ
         fetchDataAndRenderChart();
     </script>
 </body>
