@@ -1,165 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biểu Đồ Tô Màu Vùng</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Nhúng Biểu Đồ Từ Google Sheets</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            align-items: center;
+            height: 100vh;
             margin: 0;
-            background-color: #f4f4f9;
-        }
-
-        h2 {
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
+            background-color: #f9f9f9;
         }
 
         .chart-container {
-            position: relative;
-            width: 95%; /* Đảm bảo biểu đồ co giãn */
-            max-width: 1200px; /* Giới hạn chiều rộng tối đa */
-            height: 70vh; /* Chiều cao tương ứng 70% màn hình */
+            width: 800px; /* Kích thước giống như trên Google Sheets */
+            height: 600px; /* Điều chỉnh chiều cao tương ứng */
+            border: 1px solid #ccc; /* Tùy chọn: Thêm viền để phân biệt */
+            overflow: hidden; /* Đảm bảo nội dung không bị tràn */
         }
 
-        canvas {
-            width: 100% !important; /* Canvas tự động giãn theo container */
-            height: auto !important;
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <h2>Biểu Đồ Tô Màu Vùng - Dưới 20 và Trên Đường Trắng</h2>
     <div class="chart-container">
-        <canvas id="lineChart"></canvas>
+        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTX_WSSAu4_uICXTlw5TOihiGxR5KbbPU8L1ikkCzq3n91l8Qd87ysXHICjxnwNrZU1FT-EH4gJfiyR/pubchart?oid=377650201&format=interactive" allowfullscreen></iframe>
     </div>
-
-    <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbz4ndwU8Z5ELbXt6wXy0dz8_iNVk4Z-5itcdCxHufzq61wzWKLZNebTK_rTbAczMExX/exec";
-
-        async function fetchDataAndRenderChart() {
-            try {
-                const response = await fetch(scriptURL);
-                const data = await response.json();
-
-                // Trích xuất dữ liệu từ JSON
-                let labels = data.map(item => {
-                    const date = new Date(item.date); // Chuyển đổi chuỗi ngày thành Date object
-                    const day = String(date.getDate()).padStart(2, "0");
-                    const month = String(date.getMonth() + 1).padStart(2, "0");
-                    const year = String(date.getFullYear()).slice(-2);
-                    return `${day}/${month}/${year}`;
-                });
-
-                let duongXanhValues = data.map(item => item.duongXanh);
-                let duongTrangValues = data.map(item => item.duongTrang);
-
-                labels.reverse();
-                duongXanhValues.reverse();
-                duongTrangValues.reverse();
-
-                const fillData = duongXanhValues.map((value, index) => {
-                    return (value < 20 && value > duongTrangValues[index]) ? value : null;
-                });
-
-                const ctx = document.getElementById("lineChart").getContext("2d");
-                new Chart(ctx, {
-                    type: "line",
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: "Đường Xanh",
-                                data: duongXanhValues,
-                                borderColor: "blue",
-                                backgroundColor: "transparent",
-                                borderWidth: 2,
-                                pointRadius: 3,
-                                fill: false
-                            },
-                            {
-                                label: "Đường Trắng",
-                                data: duongTrangValues,
-                                borderColor: "purple",
-                                borderWidth: 2,
-                                pointRadius: 3,
-                                fill: false
-                            },
-                            {
-                                label: "Đường Ngang 20",
-                                data: Array(labels.length).fill(20),
-                                borderColor: "green",
-                                borderDash: [5, 5],
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                fill: false
-                            },
-                            {
-                                label: "Đường Ngang 60",
-                                data: Array(labels.length).fill(60),
-                                borderColor: "red",
-                                borderDash: [5, 5],
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                fill: false
-                            },
-                            {
-                                label: "Vùng tô màu",
-                                data: fillData,
-                                borderColor: "transparent",
-                                backgroundColor: "rgba(0, 255, 255, 0.3)",
-                                borderWidth: 0,
-                                pointRadius: 0,
-                                fill: true
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true, /* Giữ tỷ lệ cho biểu đồ */
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: "top"
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: "Ngày (dd/mm/yy)"
-                                },
-                                ticks: {
-                                    autoSkip: true
-                                }
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: "Giá Trị"
-                                },
-                                beginAtZero: true,
-                                ticks: {
-                                    stepSize: 10
-                                }
-                            }
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error("Lỗi khi lấy dữ liệu:", error);
-            }
-        }
-
-        fetchDataAndRenderChart();
-    </script>
 </body>
 </html>
